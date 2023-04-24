@@ -15,11 +15,21 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+  final _TextEditingController = TextEditingController();
   final TheToDoList = ToDo.todoList();
+  bool _switch = true;
+  List<ToDo> _foundToDo = [];
+  @override
+  void initState() {
+    // TODO: implement initState
+    _foundToDo = TheToDoList;
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: tdBGColor,
+      backgroundColor: _switch ? tdBGColor : Colors.black,
       appBar: _buildAppBar(),
       body: _buildBody(TheToDoList),
     );
@@ -45,7 +55,7 @@ class _HomeState extends State<Home> {
                           TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                     ),
                   ),
-                  for (ToDo todoo in todosList)
+                  for (ToDo todoo in _foundToDo.reversed)
                     ToDoItems(
                       todo: todoo,
                       onTodoChanged:
@@ -75,8 +85,11 @@ class _HomeState extends State<Home> {
                     ],
                     borderRadius: BorderRadius.circular(20)),
                 child: TextField(
+                  controller: _TextEditingController,
                   decoration: InputDecoration(
-                      hintText: "  Add a new to do", border: InputBorder.none),
+                      contentPadding: EdgeInsets.only(left: 20),
+                      hintText: "  Add a new to do",
+                      border: InputBorder.none),
                 ),
               )),
               Container(
@@ -85,7 +98,9 @@ class _HomeState extends State<Home> {
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(20)),
                 child: ElevatedButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    _AddTask(_TextEditingController.text);
+                  },
                   child: Text(
                     "+",
                     style: TextStyle(fontSize: 20, color: Colors.white),
@@ -104,13 +119,98 @@ class _HomeState extends State<Home> {
     );
   }
 
-  void _TodoDelete() {}
+  void _showTimedDelay() {
+    setState(() {
+      showDialog(
+          context: context,
+          builder: (context) {
+            Future.delayed(Duration(seconds: 3), () {
+              Navigator.of(context).pop(true);
+            });
+            return AlertDialog(
+              title: Text(' You must add a task first! =)'),
+              shadowColor: Colors.black,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10.0),
+              ),
+              backgroundColor: Colors.redAccent,
+              elevation: 4,
+            );
+          });
+    });
+  }
+
+  void _AddTask(String todo) {
+    if (todo.isNotEmpty) {
+      setState(() {
+        int X = TheToDoList.length + 1;
+        String ID = X.toString();
+
+        TheToDoList.add(ToDo(id: ID, todoText: todo));
+      });
+
+      _TextEditingController.clear();
+    } else {
+      setState(() {
+        _showTimedDelay();
+      });
+    }
+  }
+
+  void _TodoDelete(String id) {
+    showDialog(
+        context: context,
+        builder: (_) {
+          return AlertDialog(
+            title: Text("Are you sure you would like to remove the task?"),
+            content: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      TheToDoList.removeWhere((item) => item.id == id);
+                      Navigator.pop(context);
+                    });
+                  },
+                  child: const Text(
+                    "Yes",
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  style: ElevatedButton.styleFrom(primary: Colors.red),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: Text("No", style: TextStyle(color: Colors.white)),
+                  style: ElevatedButton.styleFrom(primary: Colors.blue),
+                )
+              ],
+            ),
+          );
+        });
+  }
+
+  void _Fliter(String search) {
+    List<ToDo>? results = [];
+    if (search.isEmpty) {
+      results = TheToDoList;
+    } else {
+      results = TheToDoList.where((item) =>
+          item.todoText!.toLowerCase().contains(search.toLowerCase())).toList();
+    }
+
+    setState(() {
+      _foundToDo = results!;
+    });
+  }
 
   void _handleToDo(ToDo todo) {
     setState(() {
       todo.isDone = !todo
           .isDone; //We've placed it inside to make sure the change is dynamic and seeable.
-      print("Pressed to change.");
+      // print("Pressed to change.");
       print(todo.isDone);
       print(todo.id);
     });
@@ -122,6 +222,7 @@ class _HomeState extends State<Home> {
       decoration: BoxDecoration(
           color: Colors.white, borderRadius: BorderRadius.circular(20)),
       child: TextField(
+        onChanged: (value) => _Fliter(value),
         decoration: InputDecoration(
             contentPadding: EdgeInsets.all(20),
             prefixIcon: Icon(
@@ -138,12 +239,16 @@ class _HomeState extends State<Home> {
   AppBar _buildAppBar() {
     return AppBar(
       elevation: 0, // Provides what looks like a shadow for w/e
-      backgroundColor: tdBGColor,
+      backgroundColor: _switch ? tdBGColor : Colors.black,
       title: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-        Icon(
-          Icons.menu,
-          color: tdBlack,
-          size: 30,
+        IconButton(
+          onPressed: () {
+            setState(() {
+              _switch = !_switch;
+            });
+          },
+          icon: Icon(_switch ? Icons.brightness_4 : Icons.brightness_2),
+          color: _switch ? Colors.yellow : Colors.white,
         ),
         Text(
           "My Humble ToDo App",

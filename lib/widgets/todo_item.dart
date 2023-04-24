@@ -50,6 +50,11 @@ class ToDoItems extends StatelessWidget {
             icon: Icon(Icons.delete),
             onPressed: () {
               print("Delete requested.");
+
+              AlertDialog(
+                title: Text("Are you sure you'd like to remove the task?"),
+              );
+              TodoDeleted(todo.id);
             },
           ),
         ),
