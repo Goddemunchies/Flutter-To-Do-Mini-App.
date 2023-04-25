@@ -16,7 +16,6 @@ class MyApp extends StatelessWidget {
         statusBarColor: Colors
             .transparent)); //To remove the overlay of the Phone or Chrome.
     return MaterialApp(
-      theme: ThemeData(brightness: Brightness.dark),
       debugShowCheckedModeBanner: false, //To Remove the Debug Banner.
       title: 'ToDo App',
       home: Home(),

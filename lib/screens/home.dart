@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 
+import '../model/ToDoModel.dart';
+
+import '../DB/Database.dart';
 import '../model/todo.dart';
 import '../constants/colors.dart';
 import '../widgets/todo_item.dart';
 
 double Width = 40;
 double Height = 40;
+ToDo X = ToDo(id: '01', todoText: 'Morning Excercise', isDone: true);
 
 class Home extends StatefulWidget {
   Home({super.key});
@@ -15,6 +19,10 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+  // late List<ToDoModel> Y;
+  List<ToDoModel> TodoUsingDB =
+      new ToDoModel(id: 0, todoText: "Adada", createdTime: DateTime.now())
+          as List<ToDoModel>;
   final _TextEditingController = TextEditingController();
   final TheToDoList = ToDo.todoList();
   bool _switch = true;
@@ -24,6 +32,9 @@ class _HomeState extends State<Home> {
     // TODO: implement initState
     _foundToDo = TheToDoList;
     super.initState();
+    TodoUsingDB.add(
+        ToDoModel(id: 1, todoText: "Test", createdTime: DateTime.now()));
+    refreshTodo(); //Basically here we read what we've in the DB.
   }
 
   @override
@@ -46,23 +57,7 @@ class _HomeState extends State<Home> {
               _searchBox(),
               Expanded(
                   child: ListView(
-                children: [
-                  Container(
-                    margin: EdgeInsets.only(top: 50, bottom: 20),
-                    child: Text(
-                      "All The ToDos", //To solve the null case.
-                      style:
-                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  for (ToDo todoo in _foundToDo.reversed)
-                    ToDoItems(
-                      todo: todoo,
-                      onTodoChanged:
-                          _handleToDo, // Passing on a function? How or why?
-                      TodoDeleted: _TodoDelete,
-                    ),
-                ],
+                children: _BuildingAPP,
               ))
             ],
           ),
@@ -117,6 +112,35 @@ class _HomeState extends State<Home> {
         )
       ],
     );
+  }
+
+  List<Widget> get _BuildingAPP {
+    return [
+      Container(
+        margin: EdgeInsets.only(top: 50, bottom: 20),
+        child: Text(
+          "All The ToDos", //To solve the null case.
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
+      ),
+      if (TodoUsingDB.isNotEmpty) ...[
+        for (int i = 0;
+            i < TodoUsingDB.length;
+            i++) //We need to change this so it displays the ones we've in the Database. for (ToDo todoo in _foundToDo.reversed)
+          ToDoItems(
+            todo: X,
+            onTodoChanged: _handleToDo, // Passing on a function? How or why?
+            TodoDeleted: _TodoDelete,
+          ),
+      ] else ...[
+        SizedBox(
+          height: 20,
+        ),
+        Container(
+          child: Text("There are no saved ToDos"),
+        )
+      ]
+    ];
   }
 
   void _showTimedDelay() {
@@ -264,5 +288,9 @@ class _HomeState extends State<Home> {
         )
       ]),
     );
+  }
+
+  Future refreshTodo() async {
+    this.TodoUsingDB = await ToDoDB.instance.readallNotes();
   }
 }
